@@ -1,9 +1,0 @@
-auto =True;
-connectedEthernet =True;
-
-coordinatesMax =100;
-normalDiameter =10;
-normalDelta =3;
-
-forward =-20;
-diamat =False;
