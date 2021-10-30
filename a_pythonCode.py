@@ -36,7 +36,6 @@ def diamat(): # функция анализа окружающей среды
         for x in range(45):
             lidarsCoordinates[i] = (lidarsCoordinates[i] + 1) % 360
             degrees_result[lidarsCoordinates[i]] = int(route_actual[coordinatesActual].split(",")[lidarsCoordinates[i]])
-            print(lidarsCoordinates[i])
 
     for u in range(len(degrees_result)):
         if degrees_result[u] != "x" and normalRadius - degrees_result[u] > normalDelta:
