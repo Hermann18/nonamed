@@ -1,4 +1,4 @@
-rint("начало работы")
+print("начало работы")
 from random import randint
 import threading
 
