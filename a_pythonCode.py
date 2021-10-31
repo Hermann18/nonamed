@@ -24,13 +24,14 @@ def diamat(): #функция записи данных от датчиков
     open("route", "w").write(f"{f}{sr}") #записываем все в файлик route
 
 def first_thread():
-    global coordinatesActual, video
+    global coordinatesActual, video, powers
     print("ситстемы в норме")
     while True:
         diamat()
         distanceMeters = [randint(0,100),randint(0,100,),randint(0,100,)] #симулируем значения датчиков дальнометра
         if distanceMeters[0] < 20 and distanceMeters[1] < 20 and distanceMeters[2] < 20: #если слишком близко 
             video = 0 #выключаем видео
+            powers = [0,0,0]
             break #завершаем работу
         if distanceMeters[0] != distanceMeters[1] or distanceMeters[1] != distanceMeters[2] or distanceMeters[0] != distanceMeters[2]: #если показания различны
             for i in range(len(distanceMeters)):
@@ -41,7 +42,7 @@ def first_thread():
         else:
             for i in range (len(powers)): #восстанавливаем нормальные значения мощности колес
                 powers[i] = 1 
-        coordinatesActual += 1 #условно едем вперед
+        coordinatesActual += 1 #условно шаг вперед
 
 def second_thread():
     global video
@@ -51,4 +52,3 @@ first = threading.Thread(target = first_thread, name = "a")
 second = threading.Thread(target = second_thread, name = "c")
 first.start()
 second.start()
-
