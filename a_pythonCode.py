@@ -8,7 +8,7 @@ f = open("route", "w") #очищаем файлик с маршрутом
 coordinatesActual = 0   #переменная отвечает за координаты в у.е. 
 EMA_Degrees = [0,120,240] #градусы расположения датчиков
 powers = [1,1,1] #сила на колесах
-
+gyroscopeWas = [90,90,90 ] #первичные значения гироскопа
 
 def diamat(): #функция записи данных от датчиков
     degrees = [] 
@@ -19,6 +19,8 @@ def diamat(): #функция записи данных от датчиков
             EMA_Degrees[i] = (EMA_Degrees[i] + 1) % 360 #двигаем датчик на градус
             degrees[EMA_Degrees[i]] = randint(3,6) #поскольку нет реальных данных, толщина стенки равна случайному значению от 3 до 6
     gyroscope = [randint(0, 359), randint(0, 359), randint(0, 359)] #нет реальных данных - генерируем их для гироскопа
+    for i in range(len(gyroscope)):
+        gyroscope[i] = gyroscope[i] - gyroscopeWas[i]
     sr = f":{degrees}=\n={gyroscope}; \n" #создаем строку с получившимися данными
     f = open("route", "r").read();
     open("route", "w").write(f"{f}{sr}") #записываем все в файлик route
