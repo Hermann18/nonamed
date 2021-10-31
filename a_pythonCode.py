@@ -1,81 +1,54 @@
-print("начало.работы")
+print("начало работы")
+from random import randint
+import threading
 
+video = 1 # переменная отвечаеет за запись видео
+
+f = open("route", "w") #очищаем файлик с маршрутом
 coordinatesActual = 0   #переменная отвечает за координаты в у.е. 
+EMA_Degrees = [0,120,240] #градусы расположения датчиков
+powers = [1,1,1] #сила на колесах
 
-stillWorking = True     #ну очевидно
 
-def findValue(what):    #для поиска определенных значений из файла с "настрйками"
-    settings = open("inputFromComputer", "r").read()
+def diamat(): #функция записи данных от датчиков
+    degrees = [] 
+    for y in range(360):
+        degrees.append("x") #для удобства
+    for i in range(len(EMA_Degrees)): 
+        for x in range(120):
+            EMA_Degrees[i] = (EMA_Degrees[i] + 1) % 360 #двигаем датчик на градус
+            degrees[EMA_Degrees[i]] = randint(3,6) #поскольку нет реальных данных, толщина стенки равна случайному значению от 3 до 6
+    gyroscope = [randint(0, 359), randint(0, 359), randint(0, 359)] #нет реальных данных - генерируем их для гироскопа
+    sr = f":{degrees}=\n={gyroscope}; \n" #создаем строку с получившимися данными
+    f = open("route", "r").read();
+    open("route", "w").write(f"{f}{sr}") #записываем все в файлик route
 
-    n = settings[ settings.find(what) + len(what) + 2: ]
-    # print( n[:n.find(";")], f"-{what}")
-    return n[:n.find(";")]  
-
-print("\n_____________")
-
-open("selfDataBase", "w").write("")
-open("outputToComputer", "w").write("")
-
-route_actual = open("route", "r").read().split(";")         #маршрут
-coordinatesMax = int(findValue("coordinatesMax"))           #максимальная длина выезда
-normalRadius =int(findValue("normalRadius"))                #нормальный радиус, получаем из приложения ( поскольку приложения нет - из файла)
-normalDelta = int(findValue("normalDelta"))                #нормальное отклонение радиуса, задаем в приложении ( поскольку приложения нет - в файле)
-lidarsCoordinates = [0, 90, 180, 270]                       #где Лидары
-print(coordinatesMax, normalRadius, normalDelta)            #проверяем
-
-issues = [] #проблемки
-
-def diamat(): # функция анализа окружающей среды
-    global coordinatesActual
-    issues_new = []
-
-    degrees_result = []
-    for i in range(360):
-        degrees_result.append("x")
-    for i in range(len(lidarsCoordinates)):
-        for x in range(45):
-            lidarsCoordinates[i] = (lidarsCoordinates[i] + 1) % 360
-            degrees_result[lidarsCoordinates[i]] = int(route_actual[coordinatesActual].split(",")[lidarsCoordinates[i]])
-            print(lidarsCoordinates[i])
-
-    for u in range(len(degrees_result)):
-        if degrees_result[u] != "x" and normalRadius - degrees_result[u] > normalDelta:
-            issues_new.append([coordinatesActual, u])
-
-    for i in issues_new: #Обновляем файлики с проблемками записанными на самом устройстве
-        issues.append(i) 
-        k = open("selfDataBase", "r").read() + f"{i},"
-        open("selfDataBase", "w").write( k )
-    
-    k = open("outputToComputer", "r").read() + f"{degrees_result}; \n"
-    open("outputToComputer", "w").write(k)
-
-def lazer(): #симуляция возможности приграды которую не проехать
-    if randint.random(0,100) < 10:
-        return False 
-
-def back():
-    global coordinatesActual
-    while coordinatesActual > 0:
-        doStep(-1)
-        #print(coordinatesActual)
-
-def doStep(vector):
-    global coordinatesActual
-    if coordinatesActual + (vector * 1) <= coordinatesMax and coordinatesActual + (vector * 1) >= 0:
-        coordinatesActual = coordinatesActual + (vector * 1)
-
-while (stillWorking):
-    #print(coordinatesActual) 
-    if coordinatesActual < coordinatesMax and lazer():
-        doStep(1)   #проверяем, можно ли делать шаг, делаем.шаг
+def first_thread():
+    global coordinatesActual, video
+    print("ситстемы в норме")
+    while True:
         diamat()
-    else:  #если нет - возвращаемся обратно (ездой назад)
-        back()
-        stillWorking = False
-   
-            
-print("путь закончен");
+        distanceMeters = [randint(0,100),randint(0,100,),randint(0,100,)] #симулируем значения датчиков дальнометра
+        if distanceMeters[0] < 20 and distanceMeters[1] < 20 and distanceMeters[2] < 20: #если слишком близко 
+            video = 0 #выключаем видео
+            break #завершаем работу
+        if distanceMeters[0] != distanceMeters[1] or distanceMeters[1] != distanceMeters[2] or distanceMeters[0] != distanceMeters[2]: #если показания различны
+            for i in range(len(distanceMeters)):
+                if distanceMeters[i] == max(distanceMeters): 
+                    powers[i] = 0.2 #уменьшаем скорость колеса, если его датчик показал самое большое расстояние
+                else:
+                    powers[i] = 1
+        else:
+            for i in range (len(powers)): #восстанавливаем нормальные значения мощности колес
+                powers[i] = 1 
+        coordinatesActual += 1 #условно едем вперед
 
+def second_thread():
+    global video
+    while video:
+        pass #записываем видео пока video == 1
+first = threading.Thread(target = first_thread, name = "a")
+second = threading.Thread(target = second_thread, name = "c")
+first.start()
+second.start()
 
-# Отдельным потоком делаем передачу видео. Не знаю как оформить
